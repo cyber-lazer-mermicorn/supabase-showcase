@@ -1,5 +1,5 @@
 # Supabase AI Platform
-## Built by Cherry Barton | AI Solutions Engineer
+## Built by Cherry Shanaley (Chan) | AI Solutions Engineer
 
 Full-stack AI with Supabase: pgvector, Edge Functions, Realtime, and RLS.
 
@@ -119,6 +119,6 @@ I use Supabase across my platforms for backend. This repo showcases:
 
 ## Contact
 
-**Cherry Barton** — cherry@lazermermicorn.com
+**Cherry Shanaley (Chan)** — cyber.lazer.mermicorn@gmail.com
 
 *AI Solutions Engineer | 9 Production Platforms | Supabase AI Expert*
