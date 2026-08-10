@@ -1,7 +1,7 @@
-# Supabase Commerce Platform
+# Supabase AI Platform
 ## Built by Cherry Barton | AI Solutions Engineer
 
-A full-stack commerce platform powered by Supabase: Auth, Database, Realtime, and Edge Functions.
+Full-stack AI with Supabase: pgvector, Edge Functions, Realtime, and RLS.
 
 **Live:** https://supabase-showcase.lazermermicorn.com
 
@@ -9,37 +9,35 @@ A full-stack commerce platform powered by Supabase: Auth, Database, Realtime, an
 
 ## What This Demonstrates
 
-### Supabase Auth
-- Email/password authentication
-- Social login (Google, GitHub)
-- Row Level Security (RLS)
-- Session management
+### pgvector (Latest)
+- Vector embeddings in PostgreSQL
+- HNSW indexing for fast search
+- Semantic similarity search
+- RAG pipelines
 
-### Supabase Database
-- PostgreSQL with pgvector
-- Real-time subscriptions
-- Database functions
-- Automatic API generation
+### Edge Functions
+- Serverless AI at the edge
+- Webhook handling
+- Real-time processing
 
-### Supabase Edge Functions
-- Serverless functions at the edge
-- Stripe webhook handling
-- AI inference at the edge
+### Realtime
+- Live AI responses
+- Agent state streaming
+- Multi-user collaboration
 
-### Supabase Storage
-- File uploads with CDN
-- Image transformations
-- Access control
+### Row-Level Security
+- Multi-tenant AI
+- Data isolation
+- Permission control
 
 ---
 
 ## Tech Stack
 
-- **Frontend:** Next.js 14 + Tailwind CSS
-- **Backend:** Supabase (Postgres, Auth, Storage, Edge Functions)
-- **Payments:** Stripe
-- **AI:** OpenAI via Edge Functions
-- **Deployment:** Vercel
+- **Frontend:** Next.js 15 + React 19
+- **Backend:** Supabase (Postgres + pgvector + Auth + Storage)
+- **AI:** OpenAI for embeddings
+- **Deployment:** Vercel + Supabase Cloud
 
 ---
 
@@ -55,7 +53,6 @@ npx supabase start
 
 # Set up environment
 cp .env.example .env.local
-# Add your Supabase keys
 
 # Run development
 npm run dev
@@ -65,71 +62,58 @@ npm run dev
 
 ## Features
 
-### 1. Authentication
-- Email/password signup/login
-- Social auth (Google, GitHub)
-- Protected routes with RLS
+### 1. Semantic Search
+Vector-based search with pgvector.
 
-### 2. Product Catalog
-- Real-time product updates
-- Search with full-text search
-- Image optimization
+### 2. RAG Pipeline
+Retrieval-Augmented Generation with Supabase.
 
-### 3. Shopping Cart
-- Persistent cart with Supabase
-- Real-time sync across devices
-- Guest checkout
+### 3. Real-time AI
+Live streaming of AI responses.
 
-### 4. Payments
-- Stripe checkout integration
-- Subscription management
-- Webhook handling
+### 4. Multi-tenant RLS
+Isolated data per user with RLS policies.
 
-### 5. AI Recommendations
-- Product recommendations via AI
-- Semantic search with pgvector
-- Personalized experiences
+### 5. AI Agent State
+Stream agent progress in real-time.
 
 ---
 
 ## Database Schema
 
 ```sql
--- Products table
-CREATE TABLE products (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  description TEXT,
-  price DECIMAL(10,2) NOT NULL,
-  image_url TEXT,
-  embedding VECTOR(1536), -- pgvector for AI search
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Enable pgvector
+CREATE EXTENSION IF NOT EXISTS vector;
 
--- Orders table
-CREATE TABLE orders (
+-- Documents with embeddings
+CREATE TABLE documents (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  embedding VECTOR(1536),
+  metadata JSONB,
   user_id UUID REFERENCES auth.users(id),
-  status TEXT DEFAULT 'pending',
-  total DECIMAL(10,2) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS policies
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
+-- HNSW index for fast search
+CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
+
+-- RLS policy
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can access own documents" ON documents
+  FOR ALL USING (auth.uid() = user_id);
 ```
 
 ---
 
 ## Why I Built This
 
-I've built 9 production platforms, many using Supabase. This repo showcases:
+I use Supabase across my platforms for backend. This repo showcases:
 
-- **Auth** for user management
-- **Database** for data storage
+- **pgvector** for semantic search
+- **Edge Functions** for serverless AI
 - **Realtime** for live updates
-- **Edge Functions** for serverless logic
+- **RLS** for multi-tenant security
 
 ---
 
@@ -137,4 +121,4 @@ I've built 9 production platforms, many using Supabase. This repo showcases:
 
 **Cherry Barton** — cherry@lazermermicorn.com
 
-*AI Solutions Engineer | 9 Production Platforms | Supabase Power User*
+*AI Solutions Engineer | 9 Production Platforms | Supabase AI Expert*
