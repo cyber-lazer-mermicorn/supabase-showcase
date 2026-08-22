@@ -1,12 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// This standalone showcase has no checked-in generated database contract yet.
+let supabase: SupabaseClient<any> | undefined;
+let openai: OpenAI | undefined;
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+function getSupabaseClient() {
+  if (!supabase) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !serviceRoleKey) {
+      throw new Error('NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
+    }
+    supabase = createClient<any>(url, serviceRoleKey);
+  }
+  return supabase;
+}
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is required.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export interface Document {
   id: string;
@@ -46,7 +66,7 @@ async function retryWithBackoff<T>(fn: () => Promise<T>, maxRetries = 3, baseDel
 
 export async function generateEmbedding(text: string): Promise<number[]> {
   return retryWithBackoff(async () => {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: 'text-embedding-3-small',
       input: text,
     });
@@ -61,7 +81,7 @@ export async function storeEmbedding(
   embedding: number[],
   metadata: Record<string, unknown> = {}
 ): Promise<Document> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from('documents')
     .insert({ content, embedding, metadata })
     .select()
@@ -75,7 +95,7 @@ export async function searchDocuments(
   limit = 5,
   threshold = 0.75
 ): Promise<MatchResult[]> {
-  const { data, error } = await supabase.rpc('match_documents', {
+  const { data, error } = await getSupabaseClient().rpc('match_documents', {
     query_embedding: queryEmbedding,
     match_count: limit,
     match_threshold: threshold,
@@ -85,20 +105,20 @@ export async function searchDocuments(
 }
 
 export async function getDocuments(): Promise<Document[]> {
-  const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+  const { data, error } = await getSupabaseClient().from('documents').select('*').order('created_at', { ascending: false });
   if (error) throw new Error(`getDocuments: ${error.message}`);
   return (data ?? []) as Document[];
 }
 
 export async function deleteDocument(id: string): Promise<{ success: boolean }> {
-  const { error } = await supabase.from('documents').delete().eq('id', id);
+  const { error } = await getSupabaseClient().from('documents').delete().eq('id', id);
   if (error) throw new Error(`deleteDocument: ${error.message}`);
   return { success: true };
 }
 
 export async function updateDocument(id: string, content: string): Promise<Document> {
   const embedding = await generateEmbedding(content);
-  const { data, error } = await supabase
+  const { data, error } = await getSupabaseClient()
     .from('documents')
     .update({ content, embedding, updated_at: new Date().toISOString() })
     .eq('id', id)

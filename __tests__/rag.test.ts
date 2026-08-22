@@ -3,14 +3,16 @@
  * Mocks all external dependencies.
  */
 
+import { describe, expect, it, vi } from 'vitest';
+
 // Mock supabase-ai before importing rag
-jest.mock('../lib/supabase-ai', () => ({
-  generateEmbedding: jest.fn().mockResolvedValue(new Array(1536).fill(0.1)),
-  searchDocuments: jest.fn().mockResolvedValue([
+vi.mock('../lib/supabase-ai', () => ({
+  generateEmbedding: vi.fn().mockResolvedValue(new Array(1536).fill(0.1)),
+  searchDocuments: vi.fn().mockResolvedValue([
     { id: 'doc-1', content: 'Supabase provides pgvector for vector search.', metadata: {}, similarity: 0.92 },
     { id: 'doc-2', content: 'HNSW indexing enables fast approximate nearest-neighbor queries.', metadata: {}, similarity: 0.87 },
   ]),
-  storeEmbedding: jest.fn().mockResolvedValue({
+  storeEmbedding: vi.fn().mockResolvedValue({
     id: 'stored-uuid',
     content: 'test chunk',
     metadata: { chunkIndex: 0 },
@@ -20,23 +22,24 @@ jest.mock('../lib/supabase-ai', () => ({
 }));
 
 // Mock OpenAI
-jest.mock('openai', () => {
-  return jest.fn().mockImplementation(() => ({
+vi.mock('openai', () => ({
+  default: function OpenAI() { return ({
     chat: {
       completions: {
-        create: jest.fn().mockResolvedValue({
+        create: vi.fn().mockResolvedValue({
           choices: [{ message: { content: 'Supabase supports pgvector via the vector extension.' } }],
           usage: { total_tokens: 312 },
         }),
       },
     },
     embeddings: {
-      create: jest.fn().mockResolvedValue({
+        create: vi.fn().mockResolvedValue({
         data: [{ embedding: new Array(1536).fill(0.1) }],
       }),
     },
-  }));
-});
+  });
+  },
+}));
 
 import { ragQuery, ingestDocument } from '../lib/rag';
 

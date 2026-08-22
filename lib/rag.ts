@@ -6,7 +6,18 @@ import OpenAI from 'openai';
 import { generateEmbedding, searchDocuments, storeEmbedding } from './supabase-ai';
 import type { MatchResult } from './supabase-ai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+let openai: OpenAI | undefined;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is required.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export interface IngestResult {
   id: string;
@@ -70,7 +81,7 @@ export async function ragQuery(
     .join('\n\n');
 
   // 4. Generate answer with GPT-4o
-  const completion = await openai.chat.completions.create({
+  const completion = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4o',
     messages: [
       {

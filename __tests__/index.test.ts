@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'vitest';
+
 import { storeEmbedding } from '../lib/supabase-ai';
 
 describe('storeEmbedding', () => {
