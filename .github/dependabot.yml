@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - security
+    groups:
+      security-updates:
+        applies-to: security-updates
+        dependency-type: production
+        patterns:
+          - "*"
+      supabase-sdk-updates:
+        applies-to: version-updates
+        patterns:
+          - "@supabase/*"
+          - "supabase"
+      framework-updates:
+        applies-to: version-updates
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+      tooling-patches:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - "version-update:semver-patch"
